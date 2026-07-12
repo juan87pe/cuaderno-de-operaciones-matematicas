@@ -1,0 +1,1460 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cuaderno de Matemáticas Interactivo</title>
+    <!-- Tailwind CSS para diseño rápido y moderno -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Fredoka para un estilo infantil pero ultra limpio -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Fredoka', sans-serif;
+            background-color: #f0f4f8;
+            overflow-x: hidden;
+        }
+
+        /* Cuadrícula de cuaderno estilo escolar (tamaño compacto de 2.75rem) */
+        .cuadricula-container {
+            background-color: #ffffff;
+            background-image: 
+                linear-gradient(to right, #e0f2fe 1px, transparent 1px),
+                linear-gradient(to bottom, #e0f2fe 1px, transparent 1px);
+            background-size: 2.75rem 2.75rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Estilo de cada celda individual */
+        .celda-cuadrito {
+            width: 2.75rem;
+            height: 2.75rem;
+            border: 1px solid #e0f2fe;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            transition: background-color 0.15s ease-in-out, border 0.15s ease-in-out;
+        }
+
+        /* Quitar estilos por defecto de los inputs */
+        .celda-input {
+            width: 100%;
+            height: 100%;
+            border: none;
+            outline: none;
+            background: transparent;
+            text-align: center;
+            font-size: 1.4rem;
+            font-weight: 500;
+            color: #2e1047; /* Tinta morada oscura */
+            caret-color: #6b21a8;
+            z-index: 10;
+            transition: opacity 0.15s ease-in-out;
+        }
+
+        /* Reducción proporcional para dos dígitos */
+        .celda-input.double-digit {
+            font-size: 1.15rem;
+        }
+
+        /* Cuando un cuadro está tachado, los números se vuelven transparentes */
+        .celda-cuadrito.tachado .celda-input {
+            opacity: 0.35 !important;
+        }
+
+        /* Estilo de la línea diagonal de tachado escolar */
+        .linea-tachado {
+            background: linear-gradient(to bottom left, transparent calc(50% - 2px), #f43f5e calc(50% - 1px), #f43f5e calc(50% + 1px), transparent calc(50% + 2px));
+        }
+
+        /* Soporte de galera para división de la Fase 3 (Líneas rojas escolares) */
+        .div-bracket-corner {
+            border-left: 3.5px solid #ef4444 !important;
+            border-bottom: 3.5px solid #ef4444 !important;
+        }
+        
+        .div-bracket-bottom {
+            border-bottom: 3.5px solid #ef4444 !important;
+        }
+
+        /* Colores del cuaderno */
+        .color-celeste {
+            background-color: #eaf4fc !important;
+        }
+
+        .color-amarillo {
+            background-color: #fdf391 !important;
+            border: 2px solid #5d8385 !important;
+            z-index: 20;
+        }
+
+        .color-rosa {
+            background-color: #fad3d7 !important;
+        }
+
+        .linea-naranja {
+            border-bottom: 5px solid #ff9200 !important;
+        }
+
+        /* Eliminar flechas de incremento */
+        input::-webkit-outer-spin-button,
+        input::-webkit-inner-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        /* Efecto focus en casillas */
+        .celda-cuadrito:focus-within {
+            box-shadow: inset 0 0 0 2px rgba(139, 92, 246, 0.3);
+            z-index: 25;
+        }
+
+        /* Sombra de hojas del cuaderno */
+        .hoja-esquina {
+            box-shadow: 2px 2px 0px #e2e8f0, 4px 4px 0px #cbd5e1;
+        }
+
+        /* Estilo personalizado de las teclas virtuales basadas en la imagen */
+        .tecla-v {
+            width: 3rem;
+            height: 3rem;
+            border-radius: 9999px;
+            background-color: #173d4a; /* Tono oscuro idéntico a la imagen */
+            color: #ffffff;
+            font-size: 1.35rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.1s ease-in-out;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.15);
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .tecla-v:hover {
+            background-color: #0d262f;
+            transform: scale(1.05);
+        }
+
+        .tecla-v:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 3px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-between p-4 md:p-6 transition-all duration-300 md:pr-72">
+
+    <!-- Encabezado / Barra de Control Superior -->
+    <header class="w-full max-w-5xl mb-4 flex flex-col sm:flex-row items-center justify-between gap-4 px-4 transition-all duration-300">
+        <div class="flex items-center gap-3">
+            <div class="bg-violet-600 p-2.5 rounded-2xl shadow-md text-white">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+            </div>
+            <div>
+                <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Mi Cuaderno Matemático</h1>
+            </div>
+        </div>
+
+        <!-- Herramientas Rápidas -->
+        <div class="flex items-center gap-2 bg-white p-2 rounded-2xl shadow-sm border border-slate-100 flex-wrap justify-center">
+            <!-- Paleta de Pintura Flotante sin el texto descriptivo para mayor limpieza -->
+            <div class="flex items-center gap-1.5 border-r border-slate-200 pr-2 mr-1">
+                <button onclick="cambiarHerramienta('celeste')" id="btn-celeste" class="w-6 h-6 rounded-full bg-[#eaf4fc] border border-sky-300 hover:scale-110 transition-transform cursor-pointer" title="Pintar Celeste"></button>
+                <button onclick="cambiarHerramienta('yellow')" id="btn-amarillo" class="w-6 h-6 rounded-full bg-[#fdf391] border border-amber-400 hover:scale-110 transition-transform cursor-pointer" title="Pintar Amarillo (borde verde)"></button>
+                <button onclick="cambiarHerramienta('rosa')" id="btn-rosa" class="w-6 h-6 rounded-full bg-[#fad3d7] border border-red-300 hover:scale-110 transition-transform cursor-pointer" title="Pintar Rosa"></button>
+                <button onclick="cambiarHerramienta('linea')" id="btn-linea" class="w-6 h-6 rounded-md bg-amber-500 border-b-4 border-amber-600 hover:scale-110 transition-transform cursor-pointer" title="Línea Naranja"></button>
+                <button onclick="cambiarHerramienta('blanco')" id="btn-blanco" class="w-6 h-6 rounded-full bg-white border border-slate-300 hover:scale-110 transition-transform cursor-pointer" title="Limpiar Estilo / Borrador"></button>
+            </div>
+
+            <!-- Acciones de Estado -->
+            <button onclick="limpiarTablero()" class="px-3 py-1.5 bg-slate-50 text-slate-600 hover:bg-slate-100 rounded-xl text-sm font-semibold flex items-center gap-1.5 transition-colors cursor-pointer" title="Borrar todo el contenido, colores y límites del cuaderno">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                Vaciar
+            </button>
+        </div>
+    </header>
+
+    <!-- Barra de Generación de Operaciones de la Fase 3 -->
+    <div class="w-full max-w-5xl mb-4 px-4 transition-all duration-300">
+        <div class="bg-white p-4 rounded-2xl shadow-sm border border-slate-100 flex flex-col md:flex-row items-center justify-between gap-3">
+            <div class="flex items-center gap-2.5 w-full md:w-auto">
+                <div class="bg-violet-50 text-violet-600 p-1.5 rounded-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                </div>
+                <span class="text-sm font-bold text-slate-700 whitespace-nowrap select-none">Escribe la operación:</span>
+                <!-- Se añade el evento onfocus para activar el teclado desplegable al hacer foco en la barra de operaciones -->
+                <input type="text" id="input-operacion" placeholder="Ej: 42450 - 18930,  258 * 75,  84 / 6" class="w-full md:w-80 px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-violet-400 text-sm font-medium text-slate-700 placeholder:text-slate-300" onkeydown="if(event.key === 'Enter') procesarOperacion()" onfocus="manejarFocusOperacion(event)" />
+            </div>
+            <!-- Contenedor de Botones de Carga y Verificación -->
+            <div class="w-full md:w-auto flex flex-col sm:flex-row gap-2">
+                <button onclick="procesarOperacion()" class="w-full md:w-auto px-5 py-2.5 bg-violet-600 hover:bg-violet-700 active:scale-95 text-white font-semibold text-sm rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    Cargar en Cuaderno
+                </button>
+                <!-- Botón de verificación de resultados -->
+                <button onclick="verificarResultado()" class="w-full md:w-auto px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-semibold text-sm rounded-xl transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer" title="Verificar respuesta">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    Verificar Resultado
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Indicador de herramienta activa -->
+    <div id="indicador-herramienta" class="mb-2 text-xs font-semibold px-4 py-1.5 bg-indigo-50 text-indigo-700 rounded-full shadow-sm hidden">
+        Herramienta activa: <span id="nombre-herramienta">Ninguna</span>
+    </div>
+
+    <!-- Contenedor Principal de la Hoja de Cuaderno -->
+    <main class="w-full flex-grow flex justify-center items-center py-2 transition-all duration-300">
+        <!-- El contenedor-hoja limita el tamaño máximo visible para evitar que la app desborde en pantallas pequeñas -->
+        <div id="contenedor-hoja" class="w-full max-w-5xl h-[65vh] max-h-[550px] overflow-auto border border-slate-200 rounded-2xl bg-slate-50 shadow-inner p-4 md:p-8">
+            <!-- Capa intermedia para asegurar que la cuadrícula se pueda centrar de forma hermosa -->
+            <div class="w-fit mx-auto bg-white p-6 rounded-xl shadow-md border border-slate-100">
+                <!-- Cuadrícula dinámica -->
+                <div id="cuadricula" class="cuadricula-container grid border-t border-l border-sky-100">
+                    <!-- Generado dinámicamente -->
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Teclado Numérico Desplegable Lateral -->
+    <aside id="panel-teclado" class="fixed right-0 top-0 h-full w-72 bg-[#239ca8] shadow-2xl transition-transform duration-300 z-40 flex flex-col justify-between p-5 border-l border-teal-400/30">
+        
+        <!-- Botón de colapsar / expandir -->
+        <button id="btn-toggle-teclado" onclick="toggleTeclado()" class="absolute left-[-2.5rem] top-4 w-10 h-10 bg-[#239ca8] hover:bg-[#1b7d87] text-white flex items-center justify-center rounded-l-xl shadow-md border-t border-b border-l border-teal-400/40 transition-colors focus:outline-none cursor-pointer" title="Teclado Numérico">
+            <span id="icono-toggle" class="text-lg font-bold">»</span>
+        </button>
+
+        <!-- Cabecera del Teclado / Icono de borrar -->
+        <div class="w-full flex justify-between items-center border-b border-teal-300/30 pb-4">
+            <span class="text-white font-bold tracking-wide text-xs sm:text-sm select-none">TECLADO MATEMÁTICO</span>
+            <!-- Botón Borrar Todo en la celda (Papelera) -->
+            <button onmousedown="event.preventDefault();" onclick="clickTeclaVirtual('clear')" class="w-10 h-10 bg-teal-900/30 hover:bg-teal-900/50 text-white rounded-xl flex items-center justify-center transition-colors shadow-inner cursor-pointer" title="Limpiar celda por completo">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+            </button>
+        </div>
+
+        <!-- Teclas Numéricas y Operadores de la Fase 3 -->
+        <div class="flex-grow flex flex-col justify-center items-center gap-4 py-8">
+            <!-- Grid de 4x4 que incorpora los símbolos aritméticos básicos en la columna derecha -->
+            <div class="grid grid-cols-4 gap-2">
+                <!-- Fila 1 -->
+                <button onmousedown="event.preventDefault();" onclick="clickTeclaVirtual('1')" class="tecla-v">1</button>
+                <button onmousedown="event.preventDefault();" onclick="clickTeclaVirtual('2')" class="tecla-v">2</button>
+                <button onmousedown="event.preventDefault();" onclick="clickTeclaVirtual('3')" class="tecla-v">3</button>
+                <button onmousedown="event.preventDefault();" onclick="clickTeclaVirtual('+')" class="tecla-v bg-[#1a4f5d] hover:bg-[#12363d] border border-teal-400/20 text-teal-100" title="Sumar">+</button>
+                
+                <!-- Fila 2 -->
+                <button onmousedown="event.preventDefault();" onclick="clickTeclaVirtual('4')" class="tecla-v">4</button>
+                <button onmousedown="event.preventDefault();" onclick="clickTeclaVirtual('5')" class="tecla-v">5</button>
+                <button onmousedown="event.preventDefault();" onclick="clickTeclaVirtual('6')" class="tecla-v">6</button>
+                <button onmousedown="event.preventDefault();" onclick="clickTeclaVirtual('-')" class="tecla-v bg-[#1a4f5d] hover:bg-[#12363d] border border-teal-400/20 text-teal-100" title="Restar">-</button>
+                
+                <!-- Fila 3 -->
+                <button onmousedown="event.preventDefault();" onclick="clickTeclaVirtual('7')" class="tecla-v">7</button>
+                <button onmousedown="event.preventDefault();" onclick="clickTeclaVirtual('8')" class="tecla-v">8</button>
+                <button onmousedown="event.preventDefault();" onclick="clickTeclaVirtual('9')" class="tecla-v">9</button>
+                <button onmousedown="event.preventDefault();" onclick="clickTeclaVirtual('x')" class="tecla-v bg-[#1a4f5d] hover:bg-[#12363d] border border-teal-400/20 text-teal-100" title="Multiplicar">x</button>
+                
+                <!-- Fila 4 -->
+                <!-- Botón Tachado -->
+                <button onmousedown="event.preventDefault();" onclick="clickTeclaVirtual('tachar')" class="tecla-v bg-amber-500/20 hover:bg-amber-500/40 border border-amber-500/30 text-amber-200" title="Tachar cuadrito (Diagonal \)">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="3.5">
+                      <line x1="4" y1="4" x2="20" y2="20" />
+                    </svg>
+                </button>
+                <!-- Botón 0 -->
+                <button onmousedown="event.preventDefault();" onclick="clickTeclaVirtual('0')" class="tecla-v">0</button>
+                <!-- Botón Delete -->
+                <button onmousedown="event.preventDefault();" onclick="clickTeclaVirtual('delete')" class="tecla-v bg-rose-950/40 hover:bg-rose-900/80 border border-rose-500/20" title="Borrar un número">
+                    <!-- Icono SVG de Backspace (retroceso) -->
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M12 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2M3 12l6.414 6.414A2 2 0 0010.828 19H20a2 2 0 002-2V7a2 2 0 00-2-2h-9.172a2 2 0 00-1.414.586L3 12z" />
+                    </svg>
+                </button>
+                <!-- Botón Dividir -->
+                <button onmousedown="event.preventDefault();" onclick="clickTeclaVirtual('÷')" class="tecla-v bg-[#1a4f5d] hover:bg-[#12363d] border border-teal-400/20 text-teal-100" title="Dividir">÷</button>
+            </div>
+
+            <!-- Fila 5 / Fila de Utilidades Especiales (Se eliminan las palabras "de Resta" para mayor síntesis) -->
+            <div class="flex justify-center gap-2 w-full mt-2">
+                <button onmousedown="event.preventDefault();" onclick="clickTeclaVirtual('linea-resta')" class="w-full py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 shadow active:scale-95 transition-transform cursor-pointer" title="Línea de operación naranja (＿)">
+                    <span class="text-base leading-none">🟧</span> Línea (＿)
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Instrucciones de navegación para el usuario -->
+    <footer class="mt-4 text-center text-xs text-slate-400 select-none transition-all duration-300">
+        <p>💡 <b>Cuaderno Infinito:</b> Escribe o pinta cerca de los bordes y el cuaderno crecerá de inmediato.</p>
+        <p class="mt-1">Navega libremente con las <b>flechas del teclado (↑ ↓ ← →)</b>.</p>
+    </footer>
+
+    <!-- Notificaciones flotantes internas (sin usar alert) -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-slate-800 text-white px-4 py-3 rounded-2xl shadow-lg text-sm transition-all duration-300 transform translate-y-20 opacity-0 pointer-events-none flex items-center gap-2 z-50">
+        <span id="toast-message">Mensaje</span>
+    </div>
+
+    <script>
+        // Coordenadas dinámicas de la hoja infinita
+        let minR = 0;
+        let maxR = 10; // 11 filas iniciales
+        let minC = 0;
+        let maxC = 14; // 15 columnas iniciales
+
+        // Almacenamiento clave-valor de las celdas interactuadas para no perder ningún dato al re-renderizar
+        // Llave: "r,c" -> Valor: { valor: "", color: "", lineaBottom: false, tachado: false, divBracket: "" }
+        let gridState = {};
+
+        // Almacenar metadatos de la operación cargada actualmente para poder verificarla de forma interactiva
+        let operacionActiva = null;
+
+        // Estado de la herramienta de diseño seleccionada
+        let herramientaActiva = 'escribir'; // escribir, celeste, amarillo, rosa, linea, blanco
+
+        // Rastreador del último input seleccionado para alimentar el teclado virtual
+        let ultimoInputEnfocado = null;
+
+        // Estado del teclado lateral desplegable (Inicia desplegado)
+        let tecladoAbierto = true;
+
+        // Inicializar o reconstruir la cuadrícula interactiva según los límites actuales
+        function crearCuadrice() {
+            const gridContainer = document.getElementById('cuadricula');
+            
+            const totalFilas = maxR - minR + 1;
+            const totalColumnas = maxC - minC + 1;
+
+            gridContainer.style.gridTemplateRows = `repeat(${totalFilas}, 2.75rem)`;
+            gridContainer.style.gridTemplateColumns = `repeat(${totalColumnas}, 2.75rem)`;
+            gridContainer.innerHTML = '';
+
+            for (let r = minR; r <= maxR; r++) {
+                for (let c = minC; c <= maxC; c++) {
+                    const key = `${r},${c}`;
+                    const config = gridState[key] || { valor: '', color: '', lineaBottom: false, tachado: false, divBracket: '' };
+
+                    // Contenedor del cuadrito
+                    const celda = document.createElement('div');
+                    celda.className = 'celda-cuadrito';
+                    celda.dataset.row = r;
+                    celda.dataset.col = c;
+                    celda.id = `celda-${r}-${c}`;
+
+                    // Re-aplicar colores y estilos guardados
+                    if (config.color === 'celeste') celda.classList.add('color-celeste');
+                    if (config.color === 'amarillo') celda.classList.add('color-amarillo');
+                    if (config.color === 'rosa') celda.classList.add('color-rosa');
+                    if (config.lineaBottom) celda.classList.add('linea-naranja');
+
+                    // Fase 3: Re-aplicar bordes de soporte de galera para división
+                    if (config.divBracket === 'corner') {
+                        celda.classList.add('div-bracket-corner');
+                    } else if (config.divBracket === 'bottom') {
+                        celda.classList.add('div-bracket-bottom');
+                    }
+
+                    // Input
+                    const input = document.createElement('input');
+                    input.type = 'text';
+                    input.className = 'celda-input';
+                    input.maxLength = 2;
+                    input.id = `input-${r}-${c}`;
+                    input.dataset.row = r;
+                    input.dataset.col = c;
+                    input.value = config.valor;
+
+                    evaluarTamanoLetra(input);
+
+                    // Eventos
+                    input.addEventListener('input', manejarEntrada);
+                    input.addEventListener('keydown', manejarTeclado);
+                    
+                    // Al enfocar, guardamos la referencia para el teclado digital lateral
+                    input.addEventListener('focus', (e) => {
+                        ultimoInputEnfocado = e.target;
+                        manejarFocusCelda(r, c);
+                    });
+
+                    celda.appendChild(input);
+
+                    // Re-aplicar tachado si estaba guardado en el estado (siempre después del input para superposición natural)
+                    if (config.tachado) {
+                        celda.classList.add('tachado');
+                        const line = document.createElement('div');
+                        line.className = 'linea-tachado absolute inset-0 pointer-events-none z-30';
+                        celda.appendChild(line);
+                    }
+
+                    gridContainer.appendChild(celda);
+                }
+            }
+        }
+
+        // Evaluar límites del lienzo y expandir si es necesario
+        function verificarExpansionExplicita(r, c) {
+            let expandido = false;
+            let deltaRowTop = 0;
+            let deltaColLeft = 0;
+            const EXPAND_BY = 5; // Cantidad de celdas a añadir al tocar un borde
+            const THRESHOLD = 1; // Margen de seguridad para activar el crecimiento
+
+            // Revisar límites superiores e inferiores
+            if (r < minR) {
+                const oldMinR = minR;
+                minR = r - EXPAND_BY;
+                deltaRowTop = oldMinR - minR;
+                expandido = true;
+            } else if (r <= minR + THRESHOLD) {
+                minR -= EXPAND_BY;
+                deltaRowTop = EXPAND_BY;
+                expandido = true;
+            }
+
+            if (r > maxR) {
+                maxR = r + EXPAND_BY;
+                expandido = true;
+            } else if (r >= maxR - THRESHOLD) {
+                maxR += EXPAND_BY;
+                expandido = true;
+            }
+
+            // Revisar límites izquierdos y derechos
+            if (c < minC) {
+                const oldMinC = minC;
+                minC = c - EXPAND_BY;
+                deltaColLeft = oldMinC - minC;
+                expandido = true;
+            } else if (c <= minC + THRESHOLD) {
+                minC -= EXPAND_BY;
+                deltaColLeft = EXPAND_BY;
+                expandido = true;
+            }
+
+            if (c > maxC) {
+                maxC = c + EXPAND_BY;
+                expandido = true;
+            } else if (c >= maxC - THRESHOLD) {
+                maxC += EXPAND_BY;
+                expandido = true;
+            }
+
+            if (expandido) {
+                const container = document.getElementById('contenedor-hoja');
+                const prevScrollLeft = container.scrollLeft;
+                const prevScrollTop = container.scrollTop;
+
+                // Re-renderizar la cuadrícula con el nuevo tamaño
+                crearCuadrice();
+
+                // Compensación milimétrica de scroll para que la pantalla no salte bruscamente al crecer a la izquierda o arriba
+                if (deltaColLeft > 0) {
+                    container.scrollLeft = prevScrollLeft + (deltaColLeft * 44); // 44px es el tamaño de cada celda (2.75rem)
+                } else {
+                    container.scrollLeft = prevScrollLeft;
+                }
+
+                if (deltaRowTop > 0) {
+                    container.scrollTop = prevScrollTop + (deltaRowTop * 44);
+                } else {
+                    container.scrollTop = prevScrollTop;
+                }
+                return true;
+            }
+            return false;
+        }
+
+        // Enfocar de forma segura cualquier celda
+        function enfocarCelda(r, c) {
+            verificarExpansionExplicita(r, c);
+            
+            const target = document.getElementById(`input-${r}-${c}`);
+            if (target) {
+                target.focus();
+                setTimeout(() => {
+                    if (target.value) target.select();
+                }, 10);
+            }
+        }
+
+        // Manejar la escritura en una casilla
+        function manejarEntrada(e) {
+            const r = parseInt(e.target.dataset.row);
+            const c = parseInt(e.target.dataset.col);
+            evaluarTamanoLetra(e.target);
+            guardarEstadoCelda(r, c, e.target.value);
+        }
+
+        function evaluarTamanoLetra(input) {
+            if (input.value.length > 1) {
+                input.classList.add('double-digit');
+            } else {
+                input.classList.remove('double-digit');
+            }
+        }
+
+        // Guardar el estado actual de la casilla en nuestro diccionario de memoria
+        function guardarEstadoCelda(r, c, valor) {
+            const key = `${r},${c}`;
+            const celda = document.getElementById(`celda-${r}-${c}`);
+            let color = '';
+            let lineaBottom = false;
+            let childTachado = false;
+            let divBracket = '';
+
+            if (celda) {
+                const classes = Array.from(celda.classList);
+                if (classes.includes('color-celeste')) color = 'celeste';
+                else if (classes.includes('color-amarillo')) color = 'amarillo';
+                else if (classes.includes('color-rosa')) color = 'rosa';
+                lineaBottom = classes.includes('linea-naranja');
+                childTachado = classes.includes('tachado');
+                
+                // Conservar estado de la galera de división al redimensionar
+                if (classes.includes('div-bracket-corner')) divBracket = 'corner';
+                else if (classes.includes('div-bracket-bottom')) divBracket = 'bottom';
+            } else if (gridState[key]) {
+                color = gridState[key].color;
+                lineaBottom = gridState[key].lineaBottom;
+                childTachado = gridState[key].tachado;
+                divBracket = gridState[key].divBracket;
+            }
+
+            if (valor !== '' || color !== '' || lineaBottom || childTachado || divBracket) {
+                gridState[key] = { valor, color, lineaBottom, tachado: childTachado, divBracket };
+            } else {
+                delete gridState[key];
+            }
+        }
+
+        // Alternar de manera limpia la línea naranja divisoria de restas
+        function toggleLineaCelda(r, c) {
+            const celda = document.getElementById(`celda-${r}-${c}`);
+            const input = document.getElementById(`input-${r}-${c}`);
+            if (celda && input) {
+                celda.classList.toggle('linea-naranja');
+                guardarEstadoCelda(r, c, input.value);
+            }
+        }
+
+        // Navegación fluida e infinita por teclado físico
+        function manejarTeclado(e) {
+            const r = parseInt(e.target.dataset.row);
+            const c = parseInt(e.target.dataset.col);
+            let targetR = r;
+            let targetC = c;
+            let move = false;
+
+            switch (e.key) {
+                case '-':
+                case '_':
+                    // Atajo de teclado físico para colocar/quitar línea naranja divisoria de restas
+                    e.preventDefault();
+                    toggleLineaCelda(r, c);
+                    break;
+                case 'ArrowUp':
+                    targetR = r - 1;
+                    move = true;
+                    break;
+                case 'ArrowDown':
+                    targetR = r + 1;
+                    move = true;
+                    break;
+                case 'ArrowLeft':
+                    targetC = c - 1;
+                    move = true;
+                    break;
+                case 'ArrowRight':
+                    targetC = c + 1;
+                    move = true;
+                    break;
+                case 'Backspace':
+                    if (e.target.value === '') {
+                        targetC = c - 1;
+                        move = true;
+                    }
+                    break;
+                case 'Enter':
+                    targetC = c + 1;
+                    move = true;
+                    break;
+            }
+
+            if (move) {
+                e.preventDefault();
+                enfocarCelda(targetR, targetC);
+            }
+        }
+
+        // Interacción del teclado digital virtual al pulsar una tecla
+        function clickTeclaVirtual(caracter) {
+            if (!ultimoInputEnfocado) {
+                mostrarToast("Primero toca un cuadrito en el cuaderno o la barra de operaciones 📝");
+                return;
+            }
+
+            // Mantiene el cursor enfocado en el input correspondiente
+            ultimoInputEnfocado.focus();
+
+            const isOperationInput = (ultimoInputEnfocado.id === 'input-operacion');
+            const r = parseInt(ultimoInputEnfocado.dataset.row);
+            const c = parseInt(ultimoInputEnfocado.dataset.col);
+
+            if (caracter === 'clear') {
+                ultimoInputEnfocado.value = '';
+                if (!isOperationInput) {
+                    evaluarTamanoLetra(ultimoInputEnfocado);
+                    guardarEstadoCelda(r, c, '');
+                }
+            } else if (caracter === 'linea-resta') {
+                if (isOperationInput) {
+                    mostrarToast("La línea de resta solo está disponible en el cuaderno 📝");
+                    return;
+                }
+                toggleLineaCelda(r, c);
+            } else if (caracter === 'tachar') {
+                if (isOperationInput) {
+                    mostrarToast("El tachado solo está disponible en el cuaderno 📝");
+                    return;
+                }
+                // Alternar el estado de tachado diagonal (\) de la celda activa
+                const celda = document.getElementById(`celda-${r}-${c}`);
+                if (celda) {
+                    const estaTachado = celda.classList.contains('tachado');
+                    if (estaTachado) {
+                        celda.classList.remove('tachado');
+                        const line = celda.querySelector('.linea-tachado');
+                        if (line) line.remove();
+                    } else {
+                        celda.classList.add('tachado');
+                        if (!celda.querySelector('.linea-tachado')) {
+                            const line = document.createElement('div');
+                            line.className = 'linea-tachado absolute inset-0 pointer-events-none z-30';
+                            celda.appendChild(line);
+                        }
+                    }
+                    guardarEstadoCelda(r, c, ultimoInputEnfocado.value);
+                }
+            } else if (caracter === 'delete') {
+                // Borra el dígito en la posición exacta del cursor
+                const val = ultimoInputEnfocado.value;
+                const start = ultimoInputEnfocado.selectionStart;
+                const end = ultimoInputEnfocado.selectionEnd;
+
+                if (start !== end) {
+                    // Si se seleccionó texto, borra la selección
+                    ultimoInputEnfocado.value = val.slice(0, start) + val.slice(end);
+                    ultimoInputEnfocado.setSelectionRange(start, start);
+                } else if (start > 0) {
+                    // Borra el carácter justo antes de la posición del cursor
+                    ultimoInputEnfocado.value = val.slice(0, start - 1) + val.slice(start);
+                    ultimoInputEnfocado.setSelectionRange(start - 1, start - 1);
+                }
+                
+                if (!isOperationInput) {
+                    evaluarTamanoLetra(ultimoInputEnfocado);
+                    guardarEstadoCelda(r, c, ultimoInputEnfocado.value);
+                }
+            } else {
+                // Agrega número/símbolo respetando la selección e insertándolo exactamente en la posición del cursor
+                const val = ultimoInputEnfocado.value;
+                const start = ultimoInputEnfocado.selectionStart;
+                const end = ultimoInputEnfocado.selectionEnd;
+
+                if (isOperationInput) {
+                    // En la barra de operaciones no hay límite de 2 dígitos por celda y se permiten los operadores
+                    const appendText = (['+', '-', 'x', '÷'].includes(caracter)) ? ` ${caracter} ` : caracter;
+                    ultimoInputEnfocado.value = val.slice(0, start) + appendText + val.slice(end);
+                    const nuevaPos = start + appendText.length;
+                    ultimoInputEnfocado.setSelectionRange(nuevaPos, nuevaPos);
+                } else {
+                    // En el cuaderno sí respetamos el límite de 2 dígitos
+                    const nuevaLongitud = val.slice(0, start).length + caracter.length + val.slice(end).length;
+                    if (nuevaLongitud <= 2) {
+                        ultimoInputEnfocado.value = val.slice(0, start) + caracter + val.slice(end);
+                        const nuevaPos = start + caracter.length;
+                        ultimoInputEnfocado.setSelectionRange(nuevaPos, nuevaPos);
+                        evaluarTamanoLetra(ultimoInputEnfocado);
+                        guardarEstadoCelda(r, c, ultimoInputEnfocado.value);
+                    }
+                }
+            }
+        }
+
+        // Activar y sincronizar teclado digital al hacer focus en la barra de operaciones
+        function manejarFocusOperacion(e) {
+            ultimoInputEnfocado = e.target;
+            if (!tecladoAbierto) {
+                toggleTeclado();
+            }
+        }
+
+        // Desplegar o colapsar el teclado lateral (Sincronizado con el nuevo ancho w-72 / md:pr-72)
+        function toggleTeclado() {
+            const panel = document.getElementById('panel-teclado');
+            const icono = document.getElementById('icono-toggle');
+            const cuerpo = document.body;
+
+            if (tecladoAbierto) {
+                panel.classList.add('translate-x-full');
+                cuerpo.classList.remove('md:pr-72'); // Cambiado de 64 a 72 para coincidir con el ancho del panel
+                icono.innerText = '«';
+                tecladoAbierto = false;
+            } else {
+                panel.classList.remove('translate-x-full');
+                cuerpo.classList.add('md:pr-72'); // Cambiado de 64 a 72 para coincidir con el ancho del panel
+                icono.innerText = '»';
+                tecladoAbierto = true;
+            }
+        }
+
+        // Fase 3: Procesador de Operaciones en Formato Escolar
+        function procesarOperacion() {
+            const inputVal = document.getElementById('input-operacion').value.trim();
+            if (!inputVal) {
+                mostrarToast("Escribe una operación primero (ej. 42450 - 18930) ✍️");
+                return;
+            }
+
+            // Regex compatible con +, -, *, x, /, ÷ con espacios opcionales
+            const regex = /^(\d+)\s*([\+\-\*xX\/÷])\s*(\d+)$/;
+            const match = inputVal.match(regex);
+
+            if (!match) {
+                mostrarToast("Formato inválido. Usa algo como: 244 + 55, 84 / 6 o 258 * 75");
+                return;
+            }
+
+            const t1 = match[1];
+            let op = match[2].toLowerCase();
+            const t2 = match[3];
+
+            // Normalización de operadores matemáticos
+            if (op === '*' || op === 'x') op = 'x';
+            if (op === '/' || op === '÷') op = '÷';
+
+            const val1 = parseInt(t1, 10);
+            const val2 = parseInt(t2, 10);
+
+            // Validaciones de negocio pedagógicas exigidas
+            if (op === '-') {
+                if (val1 < val2) {
+                    mostrarToast("❌ Error: El minuendo (primer número) debe ser mayor o igual que el sustraendo (segundo número).");
+                    return;
+                }
+            }
+
+            if (op === '÷') {
+                if (val2 === 0) {
+                    mostrarToast("¡Ouch! No se puede dividir entre cero 😮");
+                    return;
+                }
+                if (val1 <= val2) {
+                    mostrarToast("❌ Error: El dividendo (primer número) debe ser mayor que el divisor (segundo número).");
+                    return;
+                }
+            }
+
+            cargarOperacionEnCuaderno(t1, op, t2);
+        }
+
+        // Fase 3: Renderizador Inteligente de Estilos en el centro del Cuaderno
+        function cargarOperacionEnCuaderno(t1, op, t2) {
+            // Limpieza completa del cuaderno para cargar el nuevo ejercicio
+            gridState = {};
+            minR = 0;
+            maxR = 10;
+            minC = 0;
+            maxC = 14;
+            ultimoInputEnfocado = null;
+            operacionActiva = null;
+
+            // Retornar scroll a la parte superior izquierda
+            const container = document.getElementById('contenedor-hoja');
+            container.scrollLeft = 0;
+            container.scrollTop = 0;
+
+            const L1 = t1.length;
+            const L2 = t2.length;
+            const M = Math.max(L1, L2);
+
+            if (op === '+' || op === '-') {
+                // Cálculo de alineación dinámica para evitar desborde con números gigantescos
+                const colAlign = Math.max(8, M + 2);
+                if (colAlign > maxC) {
+                    maxC = colAlign + 2;
+                }
+
+                const rowStart = 3;
+                const colOperator = colAlign - M;
+
+                // 1. Renderizar Término 1 (Fila superior) con fondo Celeste
+                for (let i = 0; i < L1; i++) {
+                    const c = colAlign - L1 + 1 + i;
+                    gridState[`${rowStart},${c}`] = { valor: t1[i], color: 'celeste', lineaBottom: false, tachado: false, divBracket: '' };
+                }
+                // Rellenar con celeste a la izquierda del Term 1 hasta el operador para estética uniforme
+                for (let c = colOperator; c < colAlign - L1 + 1; c++) {
+                    gridState[`${rowStart},${c}`] = { valor: '', color: 'celeste', lineaBottom: false, tachado: false, divBracket: '' };
+                }
+
+                // 2. Renderizar Término 2 (Fila media) con fondo Celeste y Línea Naranja inferior
+                for (let i = 0; i < L2; i++) {
+                    const c = colAlign - L2 + 1 + i;
+                    gridState[`${rowStart + 1},${c}`] = { valor: t2[i], color: 'celeste', lineaBottom: true, tachado: false, divBracket: '' };
+                }
+                // Rellenar con celeste a la izquierda del Term 2
+                for (let c = colOperator; c < colAlign - L2 + 1; c++) {
+                    gridState[`${rowStart + 1},${c}`] = { valor: '', color: 'celeste', lineaBottom: true, tachado: false, divBracket: '' };
+                }
+
+                // 3. Renderizar Operador en el costado izquierdo del Término 2
+                gridState[`${rowStart + 1},${colOperator}`] = { valor: op, color: 'celeste', lineaBottom: true, tachado: false, divBracket: '' };
+
+                // 4. Renderizar zona de respuesta vacía (Todo color rosa para respuesta homogénea)
+                for (let c = colOperator; c <= colAlign; c++) {
+                    gridState[`${rowStart + 2},${c}`] = { valor: '', color: 'rosa', lineaBottom: false, tachado: false, divBracket: '' };
+                }
+
+                // Calcular el resultado real correcto de forma interna
+                let res = 0;
+                if (op === '+') res = parseInt(t1, 10) + parseInt(t2, 10);
+                else if (op === '-') res = parseInt(t1, 10) - parseInt(t2, 10);
+
+                operacionActiva = {
+                    tipo: op,
+                    t1: parseInt(t1, 10),
+                    t2: parseInt(t2, 10),
+                    resultadoCorrecto: res,
+                    rowResultado: rowStart + 2,
+                    colOperator: colOperator,
+                    colAlign: colAlign
+                };
+
+                crearCuadrice();
+
+                // Foco en la primera casilla rosa de resultado
+                setTimeout(() => {
+                    const focusInput = document.getElementById(`input-${rowStart + 2}-${colOperator + 1}`);
+                    if (focusInput) focusInput.focus();
+                }, 100);
+
+                mostrarToast("¡Operación cargada! Resuélvela en las casillas coloreadas. 🎨");
+
+            } else if (op === 'x') {
+                // Caso especial de multiplicación de varias cifras (image_faacc8.png)
+                if (L2 > 1) {
+                    // El resultado puede tener hasta L1 + L2 cifras
+                    const colAlign = Math.max(8, L1 + L2 + 2);
+                    if (colAlign > maxC) {
+                        maxC = colAlign + 2;
+                    }
+
+                    const rowStart = 3;
+                    const colOperator = colAlign - M;
+
+                    // 1. Renderizar Término 1 con fondo Celeste
+                    for (let i = 0; i < L1; i++) {
+                        const c = colAlign - L1 + 1 + i;
+                        gridState[`${rowStart},${c}`] = { valor: t1[i], color: 'celeste', lineaBottom: false, tachado: false, divBracket: '' };
+                    }
+                    for (let c = colOperator; c < colAlign - L1 + 1; c++) {
+                        gridState[`${rowStart},${c}`] = { valor: '', color: 'celeste', lineaBottom: false, tachado: false, divBracket: '' };
+                    }
+
+                    // 2. Renderizar Término 2 con fondo Celeste y Línea Naranja inferior
+                    for (let i = 0; i < L2; i++) {
+                        const c = colAlign - L2 + 1 + i;
+                        gridState[`${rowStart + 1},${c}`] = { valor: t2[i], color: 'celeste', lineaBottom: true, tachado: false, divBracket: '' };
+                    }
+                    for (let c = colOperator; c < colAlign - L2 + 1; c++) {
+                        gridState[`${rowStart + 1},${c}`] = { valor: '', color: 'celeste', lineaBottom: true, tachado: false, divBracket: '' };
+                    }
+
+                    // 3. Renderizar Operador 'x'
+                    gridState[`${rowStart + 1},${colOperator}`] = { valor: 'x', color: 'celeste', lineaBottom: true, tachado: false, divBracket: '' };
+
+                    // 4. Renderizar las filas de los subproductos (Suma de multiplicaciones parciales)
+                    // Primera fila de subproducto de color Rosa (según el dibujo), el resto blancas.
+                    for (let i = 0; i < L2; i++) {
+                        const rowSub = rowStart + 2 + i;
+                        const isFirst = (i === 0);
+                        const isLast = (i === L2 - 1);
+
+                        // Rango de columnas del subproducto con desplazamiento i hacia la izquierda
+                        const subProductWidth = L1 + 1;
+                        const startColSub = colAlign - i - subProductWidth + 1;
+
+                        for (let c = startColSub; c <= colAlign; c++) {
+                            gridState[`${rowSub},${c}`] = { 
+                                valor: '', 
+                                color: isFirst ? 'rosa' : '', 
+                                lineaBottom: isLast, // Línea de cierre antes de la suma final
+                                tachado: false, 
+                                divBracket: '' 
+                            };
+                        }
+                    }
+
+                    // 5. Renderizar la fila del resultado global (Suma final en la parte inferior)
+                    const rowFinal = rowStart + 2 + L2;
+                    const startColFinal = colAlign - (L1 + L2);
+                    for (let c = startColFinal; c <= colAlign; c++) {
+                        gridState[`${rowFinal},${c}`] = { valor: '', color: '', lineaBottom: false, tachado: false, divBracket: '' };
+                    }
+
+                    const res = parseInt(t1, 10) * parseInt(t2, 10);
+                    operacionActiva = {
+                        tipo: op,
+                        t1: parseInt(t1, 10),
+                        t2: parseInt(t2, 10),
+                        resultadoCorrecto: res,
+                        rowResultado: rowFinal,
+                        colOperator: startColFinal,
+                        colAlign: colAlign
+                    };
+
+                    crearCuadrice();
+
+                    // Poner foco en la primera celda del primer subproducto interactivo (Fila Rosa)
+                    setTimeout(() => {
+                        const focusInput = document.getElementById(`input-${rowStart + 2}-${colAlign}`);
+                        if (focusInput) focusInput.focus();
+                    }, 100);
+
+                    mostrarToast("¡Multiplicación de varias cifras cargada! Completa las casillas vacías. 🎨");
+
+                } else {
+                    // Si el multiplicador es de un solo dígito (L2 == 1), usamos la disposición simple clásica de 3 filas
+                    const colAlign = Math.max(8, L1 + 2);
+                    if (colAlign > maxC) {
+                        maxC = colAlign + 2;
+                    }
+
+                    const rowStart = 3;
+                    const colOperator = colAlign - M;
+
+                    // 1. Renderizar Término 1
+                    for (let i = 0; i < L1; i++) {
+                        const c = colAlign - L1 + 1 + i;
+                        gridState[`${rowStart},${c}`] = { valor: t1[i], color: 'celeste', lineaBottom: false, tachado: false, divBracket: '' };
+                    }
+                    for (let c = colOperator; c < colAlign - L1 + 1; c++) {
+                        gridState[`${rowStart},${c}`] = { valor: '', color: 'celeste', lineaBottom: false, tachado: false, divBracket: '' };
+                    }
+
+                    // 2. Renderizar Término 2 con Línea Naranja inferior
+                    const cT2 = colAlign;
+                    gridState[`${rowStart + 1},${cT2}`] = { valor: t2[0], color: 'celeste', lineaBottom: true, tachado: false, divBracket: '' };
+                    for (let c = colOperator; c < colAlign; c++) {
+                        gridState[`${rowStart + 1},${c}`] = { valor: '', color: 'celeste', lineaBottom: true, tachado: false, divBracket: '' };
+                    }
+
+                    // 3. Renderizar Operador 'x'
+                    gridState[`${rowStart + 1},${colOperator}`] = { valor: 'x', color: 'celeste', lineaBottom: true, tachado: false, divBracket: '' };
+
+                    // 4. Renderizar fila de respuesta (Todo Rosa)
+                    for (let c = colOperator; c <= colAlign; c++) {
+                        gridState[`${rowStart + 2},${c}`] = { valor: '', color: 'rosa', lineaBottom: false, tachado: false, divBracket: '' };
+                    }
+
+                    const res = parseInt(t1, 10) * parseInt(t2, 10);
+                    operacionActiva = {
+                        tipo: op,
+                        t1: parseInt(t1, 10),
+                        t2: parseInt(t2, 10),
+                        resultadoCorrecto: res,
+                        rowResultado: rowStart + 2,
+                        colOperator: colOperator,
+                        colAlign: colAlign
+                    };
+
+                    crearCuadrice();
+
+                    setTimeout(() => {
+                        const focusInput = document.getElementById(`input-${rowStart + 2}-${colAlign}`);
+                        if (focusInput) focusInput.focus();
+                    }, 100);
+
+                    mostrarToast("¡Multiplicación cargada! Resuélvela en las casillas rosas. 🎨");
+                }
+
+            } else if (op === '÷') {
+                // Formato de galera para División (Esquema L)
+                const rowStart = 3;
+                const colStart = 3;
+
+                // Calcular longitud del cociente para dimensionar la galera de manera adaptada
+                const LC = String(Math.floor(parseInt(t1, 10) / parseInt(t2, 10))).length;
+                const maxDivCols = Math.max(L2, LC);
+
+                // Asegurar tamaño del lienzo
+                const totalNecesario = colStart + L1 + maxDivCols + 2;
+                if (totalNecesario > maxC) {
+                    maxC = totalNecesario + 1;
+                }
+
+                // 1. Renderizar Dividendo
+                for (let i = 0; i < L1; i++) {
+                    const c = colStart + i;
+                    gridState[`${rowStart},${c}`] = { valor: t1[i], color: '', lineaBottom: false, tachado: false, divBracket: '' };
+                }
+
+                // 2. Renderizar Divisor en Galera Roja extendida de longitud maxDivCols
+                const colDivStart = colStart + L1;
+                for (let i = 0; i < maxDivCols; i++) {
+                    const c = colDivStart + i;
+                    const valorDiv = (i < L2) ? t2[i] : '';
+                    const bracketType = (i === 0) ? 'corner' : 'bottom';
+                    gridState[`${rowStart},${c}`] = { valor: valorDiv, color: '', lineaBottom: false, tachado: false, divBracket: bracketType };
+                }
+
+                // 3. Crear celdas sugeridas de respuesta para el cociente justo bajo el divisor
+                for (let i = 0; i < maxDivCols; i++) {
+                    const c = colDivStart + i;
+                    gridState[`${rowStart + 1},${c}`] = { valor: '', color: '', lineaBottom: false, tachado: false, divBracket: '' };
+                }
+
+                operacionActiva = {
+                    tipo: op,
+                    t1: parseInt(t1, 10),
+                    t2: parseInt(t2, 10),
+                    resultadoCorrecto: Math.floor(parseInt(t1, 10) / parseInt(t2, 10)),
+                    rowResultado: rowStart + 1,
+                    colDivStart: colDivStart,
+                    L2: L2,
+                    LC: LC
+                };
+
+                crearCuadrice();
+
+                // Foco inmediato en el área de cociente bajo la galera
+                setTimeout(() => {
+                    const focusInput = document.getElementById(`input-${rowStart + 1}-${colDivStart}`);
+                    if (focusInput) focusInput.focus();
+                }, 100);
+
+                mostrarToast("¡Operación de división cargada! Resuélvela usando la galera L. ✏️");
+            }
+        }
+
+        // Función de verificación de respuesta con soporte estricto de columnas (unidades, decenas, centenas)
+        function verificarResultado() {
+            if (!operacionActiva || !operacionActiva.tipo) {
+                mostrarToast("No hay ninguna operación activa para verificar. ¡Carga una primero! 📚");
+                return;
+            }
+
+            const { tipo, resultadoCorrecto, rowResultado } = operacionActiva;
+            const correctDigits = String(resultadoCorrecto);
+            const L_R = correctDigits.length;
+
+            if (tipo === '+' || tipo === '-' || tipo === 'x') {
+                const { colOperator, colAlign } = operacionActiva;
+                let todoVacio = true;
+                let respuestaUsuarioStr = '';
+
+                // Comprobar si se ha escrito algo en la fila correspondiente
+                // Extendemos levemente el escaneo a la izquierda para capturar resultados grandes de multiplicación
+                const startScan = Math.min(colOperator, colAlign - L_R);
+                for (let c = startScan; c <= colAlign; c++) {
+                    const input = document.getElementById(`input-${rowResultado}-${c}`);
+                    if (input && input.value.trim() !== '') {
+                        todoVacio = false;
+                        respuestaUsuarioStr += input.value.trim();
+                    }
+                }
+
+                if (todoVacio) {
+                    mostrarToast("Aún no has escrito ningún resultado en la fila de respuesta final. ✍️");
+                    return;
+                }
+
+                // Validación columna por columna respetando Unidades, Decenas y Centenas
+                let esCorrecto = true;
+                let celdasIncorrectas = [];
+                let celdasCorrectas = [];
+
+                for (let c = startScan; c <= colAlign; c++) {
+                    const celda = document.getElementById(`celda-${rowResultado}-${c}`);
+                    const input = document.getElementById(`input-${rowResultado}-${c}`);
+                    if (!celda || !input) continue;
+
+                    const valEscrito = input.value.trim();
+                    const dist = colAlign - c; // Distancia desde la columna de las unidades (derecha)
+
+                    let valEsperado = "";
+                    if (dist < L_R) {
+                        valEsperado = correctDigits[L_R - 1 - dist];
+                    }
+
+                    if (valEscrito !== valEsperado) {
+                        esCorrecto = false;
+                        celdasIncorrectas.push(celda);
+                    } else {
+                        if (valEscrito !== "") {
+                            celdasCorrectas.push(celda);
+                        }
+                    }
+                }
+
+                if (esCorrecto) {
+                    // Feedback de éxito (Verde parpadeante en celdas correctas)
+                    celdasCorrectas.forEach(cell => {
+                        cell.style.transition = 'all 0.3s ease';
+                        cell.style.backgroundColor = '#a7f3d0'; // Verde menta
+                        cell.style.borderColor = '#10b981';
+                    });
+                    setTimeout(() => {
+                        celdasCorrectas.forEach(cell => {
+                            cell.style.backgroundColor = '';
+                            cell.style.borderColor = '';
+                        });
+                    }, 2500);
+
+                    mostrarToast("¡Excelente! ¡El resultado es CORRECTO y está en la posición perfecta! 🎉🤩");
+                } else {
+                    // Detección pedagógica: ¿Escribió los dígitos correctos pero desplazados?
+                    if (parseInt(respuestaUsuarioStr, 10) === resultadoCorrecto) {
+                        celdasIncorrectas.forEach(cell => {
+                            cell.style.transition = 'all 0.3s ease';
+                            cell.style.backgroundColor = '#fca5a5'; // Rojo suave
+                            cell.style.borderColor = '#f43f5e';
+                        });
+                        setTimeout(() => {
+                            celdasIncorrectas.forEach(cell => {
+                                cell.style.backgroundColor = '';
+                                cell.style.borderColor = '';
+                            });
+                        }, 2500);
+
+                        mostrarToast("¡Casi! Los números son correctos, pero no están en la posición adecuada. Recuerda alinear las unidades con las unidades (a la derecha). 🧠");
+                    } else {
+                        // Flashear toda la fila en rojo indicando error general
+                        for (let c = startScan; c <= colAlign; c++) {
+                            const celda = document.getElementById(`celda-${rowResultado}-${c}`);
+                            if (celda) {
+                                celda.style.transition = 'all 0.3s ease';
+                                celda.style.backgroundColor = '#fca5a5';
+                                celda.style.borderColor = '#f43f5e';
+                            }
+                        }
+                        setTimeout(() => {
+                            for (let c = startScan; c <= colAlign; c++) {
+                                const celda = document.getElementById(`celda-${rowResultado}-${c}`);
+                                if (celda) {
+                                    celda.style.backgroundColor = '';
+                                    celda.style.borderColor = '';
+                                }
+                            }
+                        }, 2500);
+
+                        mostrarToast("El resultado de la suma final no es correcto. ¡Revisa tus cálculos! 💪");
+                    }
+                }
+
+            } else if (tipo === '÷') {
+                const { colDivStart, LC, t1, t2 } = operacionActiva;
+                const correctResiduo = t1 % t2;
+                const correctResiduoDigits = String(correctResiduo);
+                const L1 = String(t1).length;
+                const colStart = 3; // El dividendo empieza siempre en la columna 3
+
+                // 1. Obtener y validar Cociente
+                let cocienteUsuarioStr = '';
+                let cocienteCeldas = [];
+                let cocienteVacio = true;
+
+                for (let i = 0; i < LC; i++) {
+                    const c = colDivStart + i;
+                    const input = document.getElementById(`input-${rowResultado}-${c}`);
+                    const celda = document.getElementById(`celda-${rowResultado}-${c}`);
+                    if (input && celda) {
+                        const val = input.value.trim();
+                        if (val !== '') {
+                            cocienteUsuarioStr += val;
+                            cocienteVacio = false;
+                        }
+                        cocienteCeldas.push({ input, celda, val });
+                    }
+                }
+
+                if (cocienteVacio) {
+                    mostrarToast("Por favor escribe el cociente debajo de la galera de la división. ✍️");
+                    return;
+                }
+
+                // 2. Obtener y validar Residuo buscando dinámicamente la última fila desarrollada en las columnas del dividendo
+                let maxRowWorked = -1;
+                for (let r = 4; r <= maxR + 5; r++) {
+                    let rowHasData = false;
+                    for (let c = colStart; c < colStart + L1; c++) {
+                        const input = document.getElementById(`input-${r}-${c}`);
+                        if (input && input.value.trim() !== '') {
+                            rowHasData = true;
+                            break;
+                        }
+                    }
+                    if (rowHasData) {
+                        maxRowWorked = r;
+                    }
+                }
+
+                if (maxRowWorked === -1 || maxRowWorked === rowResultado) {
+                    mostrarToast("Por favor desarrolla los pasos de la división abajo para encontrar y escribir el residuo final en el cuaderno. 📝");
+                    return;
+                }
+
+                let residuoUsuarioStr = '';
+                let residuoCeldas = [];
+                let residuoVacio = true;
+
+                for (let c = colStart; c < colStart + L1; c++) {
+                    const input = document.getElementById(`input-${maxRowWorked}-${c}`);
+                    const celda = document.getElementById(`celda-${maxRowWorked}-${c}`);
+                    if (input && celda) {
+                        const val = input.value.trim();
+                        if (val !== '') {
+                            residuoUsuarioStr += val;
+                            residuoVacio = false;
+                        }
+                        residuoCeldas.push({ input, celda, val, col: c });
+                    }
+                }
+
+                if (residuoVacio) {
+                    mostrarToast("Por favor escribe el residuo final en la última fila del proceso de la división. ✍️");
+                    return;
+                }
+
+                // Evaluación lógica posicional y matemática del Cociente
+                const cocienteMatematicoCorrecto = (parseInt(cocienteUsuarioStr, 10) === resultadoCorrecto);
+                let cocientePosicionalCorrecto = true;
+                let cocienteIncorrectos = [];
+                let cocienteCorrectos = [];
+
+                for (let i = 0; i < LC; i++) {
+                    const cellObj = cocienteCeldas[i];
+                    if (cellObj.val !== correctDigits[i]) {
+                        cocientePosicionalCorrecto = false;
+                        cocienteIncorrectos.push(cellObj.celda);
+                    } else {
+                        cocienteCorrectos.push(cellObj.celda);
+                    }
+                }
+
+                // Evaluación lógica posicional y matemática del Residuo
+                const residuoMatematicoCorrecto = (parseInt(residuoUsuarioStr, 10) === correctResiduo);
+                let residuoPosicionalCorrecto = true;
+                let residuoIncorrectos = [];
+                let residuoCorrectos = [];
+
+                for (let idx = 0; idx < residuoCeldas.length; idx++) {
+                    const cellObj = residuoCeldas[idx];
+                    const c = cellObj.col;
+                    const dist = (colStart + L1 - 1) - c;
+
+                    let valEsperado = "";
+                    if (dist < correctResiduoDigits.length) {
+                        valEsperado = correctResiduoDigits[correctResiduoDigits.length - 1 - dist];
+                    }
+
+                    if (valEsperado === "") {
+                        // Aceptamos vacío o "0" para columnas a la izquierda del residuo real
+                        if (cellObj.val !== "" && cellObj.val !== "0" && cellObj.val !== "00") {
+                            residuoPosicionalCorrecto = false;
+                            residuoIncorrectos.push(cellObj.celda);
+                        } else if (cellObj.val !== "") {
+                            residuoCorrectos.push(cellObj.celda);
+                        }
+                    } else {
+                        if (cellObj.val !== valEsperado) {
+                            residuoPosicionalCorrecto = false;
+                            residuoIncorrectos.push(cellObj.celda);
+                        } else {
+                            residuoCorrectos.push(cellObj.celda);
+                        }
+                    }
+                }
+
+                // Combinaciones de feedback pedagógico
+                const cellsToGreen = [...cocienteCorrectos, ...residuoCorrectos];
+                const cellsToRed = [...cocienteIncorrectos, ...residuoIncorrectos];
+
+                // Aplicar estilos visuales temporales de feedback
+                cellsToGreen.forEach(cell => {
+                    cell.style.transition = 'all 0.3s ease';
+                    cell.style.backgroundColor = '#a7f3d0'; // Verde
+                    cell.style.borderColor = '#10b981';
+                });
+                cellsToRed.forEach(cell => {
+                    cell.style.transition = 'all 0.3s ease';
+                    cell.style.backgroundColor = '#fca5a5'; // Rojo suave
+                    cell.style.borderColor = '#f43f5e';
+                });
+
+                setTimeout(() => {
+                    cellsToGreen.forEach(cell => {
+                        cell.style.backgroundColor = '';
+                        cell.style.borderColor = '';
+                    });
+                    cellsToRed.forEach(cell => {
+                        cell.style.backgroundColor = '';
+                        cell.style.borderColor = '';
+                    });
+                }, 3000);
+
+                // Lanzar alertas descriptivas pedagógicas
+                if (cocientePosicionalCorrecto && residuoPosicionalCorrecto) {
+                    mostrarToast(`¡Excelente! El cociente (${resultadoCorrecto}) y el residuo (${correctResiduo}) son CORRECTOS y están perfectamente posicionados. 🎉🤩`);
+                } else if (cocientePosicionalCorrecto && residuoMatematicoCorrecto && !residuoPosicionalCorrecto) {
+                    mostrarToast(`¡Casi! El cociente es perfecto y hallaste el residuo correcto (${correctResiduo}), pero el residuo no está en la columna adecuada. Recuerda alinearlo a la derecha del dividendo. 🧠`);
+                } else if (cocienteMatematicoCorrecto && !cocientePosicionalCorrecto && residuoPosicionalCorrecto) {
+                    mostrarToast(`¡Casi! El residuo es perfecto y hallaste el cociente correcto (${resultadoCorrecto}), pero el cociente debe comenzar alineado a la izquierda bajo el divisor. 🧠`);
+                } else if (cocienteMatematicoCorrecto && residuoMatematicoCorrecto && (!cocientePosicionalCorrecto || !residuoPosicionalCorrecto)) {
+                    mostrarToast("Ambos valores son correctos, pero debes alinearlos en sus columnas correspondientes de la cuadrícula. ✏️");
+                } else {
+                    mostrarToast("El cociente o el residuo no son correctos. ¡Revisa tu división y vuelve a intentarlo! 💪");
+                }
+            }
+        }
+
+        // Interacción con herramientas (Pintar / Delinear)
+        function manejarFocusCelda(r, c) {
+            // Si no hay herramientas seleccionadas, solo verificamos si requiere expansión por focus natural
+            if (herramientaActiva === 'escribir') {
+                verificarExpansionExplicita(r, c);
+                return;
+            }
+
+            const celda = document.getElementById(`celda-${r}-${c}`);
+            const input = document.getElementById(`input-${r}-${c}`);
+            if (!celda || !input) return;
+
+            if (herramientaActiva === 'celeste') {
+                limpiarFiltrosEstilo(celda);
+                celda.classList.add('color-celeste');
+            } else if (herramientaActiva === 'amarillo') {
+                limpiarFiltrosEstilo(celda);
+                celda.classList.add('color-amarillo');
+            } else if (herramientaActiva === 'rosa') {
+                limpiarFiltrosEstilo(celda);
+                celda.classList.add('color-rosa');
+            } else if (herramientaActiva === 'linea') {
+                celda.classList.toggle('linea-naranja');
+            } else if (herramientaActiva === 'blanco') {
+                limpiarFiltrosEstilo(celda);
+                celda.classList.remove('linea-naranja');
+            }
+
+            // Sincronizar con el estado guardado
+            guardarEstadoCelda(r, c, input.value);
+            
+            // Expandir si pintamos cerca del borde
+            verificarExpansionExplicita(r, c);
+        }
+
+        // Limpiar los colores de fondo de las celdas
+        function limpiarFiltrosEstilo(celda) {
+            celda.classList.remove('color-celeste', 'color-amarillo', 'color-rosa');
+        }
+
+        // Cambiar entre la barra de herramientas flotante
+        function cambiarHerramienta(herramienta) {
+            const botones = ['celeste', 'amarillo', 'rosa', 'linea', 'blanco'];
+            botones.forEach(b => {
+                const btn = document.getElementById(`btn-${b}`);
+                if (btn) btn.classList.remove('scale-125', 'ring-4', 'ring-violet-300');
+            });
+
+            const indicador = document.getElementById('indicador-herramienta');
+            const nombreHerramienta = document.getElementById('nombre-herramienta');
+
+            if (herramientaActiva === herramienta) {
+                herramientaActiva = 'escribir';
+                indicador.classList.add('hidden');
+                mostrarToast("Modo escritura estándar activo ✍️");
+            } else {
+                herramientaActiva = herramienta;
+                const btnActivo = document.getElementById(`btn-${herramienta}`);
+                if (btnActivo) btnActivo.classList.add('scale-125', 'ring-4', 'ring-violet-300');
+                
+                indicador.classList.remove('hidden');
+                nombreHerramienta.innerText = obtenerNombreHerramienta(herramienta);
+                mostrarToast(`Herramienta "${obtenerNombreHerramienta(herramienta)}" activa. ¡Toca cualquier cuadrito!`);
+            }
+        }
+
+        // Nombre de la herramienta activa
+        function obtenerNombreHerramienta(key) {
+            switch(key) {
+                case 'celeste': return 'Pintar Celeste 🟦';
+                case 'amarillo': return 'Pintar Amarillo con borde 🟨';
+                case 'rosa': return 'Pintar Rosa 🟥';
+                case 'linea': return 'Pintar Línea de operación naranja 🟧';
+                case 'blanco': return 'Borrador de color 🧼';
+                default: return 'Escritura';
+            }
+        }
+
+        // Vaciar completamente la cuadrícula a su estado inicial
+        function limpiarTablero() {
+            gridState = {};
+            minR = 0;
+            maxR = 10;
+            minC = 0;
+            maxC = 14;
+            ultimoInputEnfocado = null;
+            operacionActiva = null;
+            
+            document.getElementById('input-operacion').value = '';
+            crearCuadrice();
+            cambiarHerramienta('escribir');
+
+            const container = document.getElementById('contenedor-hoja');
+            container.scrollLeft = 0;
+            container.scrollTop = 0;
+
+            mostrarToast("Se ha limpiado el cuaderno y regresado al tamaño inicial. 🧼");
+        }
+
+        // Mostrar mensajes interactivos flotantes
+        function mostrarToast(mensaje) {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-message');
+            toastMsg.innerText = mensaje;
+            
+            toast.classList.remove('translate-y-20', 'opacity-0', 'pointer-events-none');
+            
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0', 'pointer-events-none');
+            }, 3000);
+        }
+
+        // Iniciar app vacía y limpia
+        window.onload = function() {
+            crearCuadrice();
+            mostrarToast("¡Hola! Tu cuaderno nuevo e infinito está listo. Escribe una operación matemática arriba para comenzar. 📝");
+        }
+    </script>
+</body>
+</html>
