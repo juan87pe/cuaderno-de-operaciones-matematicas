@@ -24,15 +24,19 @@ Un cuaderno digital interactivo diseñado para ayudar a los niños a practicar o
 - **Tailwind CSS** (para diseño ágil y responsivo)
 - **Google Fonts** (Fredoka)
 
-## 📦 Cómo Ejecutar el Proyecto
+## 📦 Cómo Ejecutar y Probar el Proyecto
 
-Dado que es una aplicación web del lado del cliente, no requiere de servidores de base de datos ni compilaciones complejas. Solo necesitas abrir el archivo en tu navegador:
+Dado que es una aplicación web estática del lado del cliente, no requiere servidores ni compilaciones. Tienes dos formas de usarlo y probarlo:
 
+### 1. En línea (Recomendado para multidispositivo)
+El proyecto está configurado para publicarse en GitHub Pages. Una vez activo, puedes acceder desde tu móvil, tablet o computadora a través del enlace generado por GitHub.
+
+### 2. Ejecución Local
 1. Clona este repositorio:
    ```bash
    git clone https://github.com/juan87pe/cuaderno-de-operaciones-matematicas.git
    ```
-2. Abre el archivo `cuaderno_de_matem_ticas_interactivo.html` en cualquier navegador web moderno (Chrome, Edge, Firefox, Safari).
+2. Abre el archivo `index.html` en cualquier navegador web moderno (Chrome, Edge, Firefox, Safari).
 
 ---
 
